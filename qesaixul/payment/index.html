@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Система оплаты</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e1e5f2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .header {
+            background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+        }
+        
+        .lang-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .lang-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .step-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .step-container::before {
+            content: "";
+            position: absolute;
+            height: 3px;
+            background: #e0e0e0;
+            top: 15px;
+            left: 10%;
+            right: 10%;
+        }
+        
+        .step {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            flex: 1;
+        }
+        
+        .step-icon {
+            width: 35px;
+            height: 35px;
+            background: #e0e0e0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            color: #777;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .step.active .step-icon {
+            background: #6a11cb;
+            color: white;
+        }
+        
+        .step.completed .step-icon {
+            background: #ff7e5f;
+            color: white;
+        }
+        
+        .step-title {
+            font-size: 13px;
+            color: #777;
+        }
+        
+        .step.active .step-title {
+            color: #6a11cb;
+            font-weight: 600;
+        }
+        
+        .step-content {
+            display: none;
+        }
+        
+        .step-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: #6a11cb;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(106, 17, 203, 0.2);
+        }
+        
+        .payment-methods {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .payment-method {
+            flex: 1;
+            min-width: 200px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .payment-method:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-color: #6a11cb;
+        }
+        
+        .payment-method.selected {
+            border-color: #6a11cb;
+            background: rgba(106, 17, 203, 0.05);
+        }
+        
+        .payment-method i {
+            font-size: 40px;
+            color: #6a11cb;
+            margin-bottom: 15px;
+        }
+        
+        .payment-details {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 20px;
+            border-left: 4px solid #ff7e5f;
+        }
+        
+        .payment-details h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .upload-area {
+            border: 2px dashed #c3cfe2;
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 20px 0;
+        }
+        
+        .upload-area:hover {
+            border-color: #6a11cb;
+            background: rgba(106, 17, 203, 0.05);
+        }
+        
+        .upload-area i {
+            font-size: 50px;
+            color: #6a11cb;
+            margin-bottom: 15px;
+        }
+        
+        .receipt {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            max-width: 500px;
+            margin: 20px auto;
+            border-top: 5px solid #ff7e5f;
+        }
+        
+        .receipt-header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 2px dashed #e0e0e0;
+            padding-bottom: 15px;
+        }
+        
+        .receipt-header h2 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .receipt-details {
+            margin: 20px 0;
+        }
+        
+        .receipt-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .receipt-total {
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px dashed #e0e0e0;
+        }
+        
+        .btn-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            gap: 15px;
+        }
+        
+        button {
+            padding: 14px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-prev {
+            background: #f1f1f1;
+            color: #555;
+        }
+        
+        .btn-next {
+            background: linear-gradient(90deg, #ff7e5f 0%, #feb47b 100%);
+            color: white;
+        }
+        
+        .btn-save {
+            background: linear-gradient(90deg, #2575fc 0%, #6a11cb 100%);
+            color: white;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .success-message {
+            text-align: center;
+            padding: 30px;
+        }
+        
+        .success-message i {
+            font-size: 80px;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+        
+        .comment-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 5px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .payment-methods {
+                flex-direction: column;
+            }
+            
+            .btn-container {
+                flex-direction: column;
+            }
+            
+            .lang-toggle {
+                position: relative;
+                top: 0;
+                right: 0;
+                margin: 10px auto;
+                display: inline-flex;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="header-title">Система оплаты</h1>
+            <p id="header-subtitle">Завершите оплату в 3 простых шага</p>
+            <button class="lang-toggle" id="lang-toggle">
+                <i class="fas fa-language"></i>
+                <span id="lang-text">English</span>
+            </button>
+        </div>
+        
+        <div class="step-container">
+            <div class="step active" id="step1">
+                <div class="step-icon">1</div>
+                <div class="step-title" id="step1-title">Детали оплаты</div>
+            </div>
+            <div class="step" id="step2">
+                <div class="step-icon">2</div>
+                <div class="step-title" id="step2-title">Оплатить</div>
+            </div>
+            <div class="step" id="step3">
+                <div class="step-icon">3</div>
+                <div class="step-title" id="step3-title">Подтверждение</div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <!-- Step 1: Payment Details -->
+            <div class="step-content active" id="step1-content">
+                <div class="form-group">
+                    <label for="service" id="service-label">Выберите услугу</label>
+                    <select id="service" required>
+                        <option value="">-- Выберите услугу --</option>
+                        <option value="english-online">Английский язык (группа - онлайн)</option>
+                        <option value="english-offline">Английский язык (группа - офлайн)</option>
+                        <option value="programming-basics">Основы программирования (офлайн)</option>
+                        <option value="roblox">Разработка игр в Roblox (офлайн)</option>
+                        <option value="python-intro">Введение в Python (онлайн)</option>
+                        <option value="python-advanced">Продвинутое программирование на Python (офлайн)</option>
+                        <option value="web-design">Веб-дизайн (онлайн)</option>
+                        <option value="web-dev">JavaScript/HTML/CSS (офлайн)</option>
+                        <option value="ai-intro">Введение в Искусственный Интеллект (онлайн)</option>
+                        <option value="machine-learning">Машинное обучение для всех (офлайн)</option>
+                        <option value="neural-networks">Программирование нейронных сетей (офлайн)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="amount" id="amount-label">Сумма оплаты (RUB)</label>
+                    <input type="number" id="amount" min="1" placeholder="Введите сумму" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="comment" id="comment-label">Комментарий к платежу</label>
+                    <textarea id="comment" placeholder="Укажите, за кого производится оплата (ФИО участника)"></textarea>
+                    <div class="comment-label">
+                        <i class="fas fa-info-circle"></i>
+                        <span id="comment-note">Обязательно укажите, за кого производится оплата</span>
+                    </div>
+                </div>
+                
+                <div class="btn-container">
+                    <button class="btn-next" onclick="nextStep(2)" id="proceed-btn">
+                        <span>Перейти к оплате</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Step 2: Payment Methods -->
+            <div class="step-content" id="step2-content">
+                <h2 id="method-title">Выберите способ оплаты</h2>
+                <p id="method-subtitle">Выберите предпочтительный способ оплаты</p>
+                
+                <div class="payment-methods">
+                    <div class="payment-method" onclick="selectMethod(this)">
+                        <i class="fas fa-mobile-alt"></i>
+                        <h3>СБП Перевод</h3>
+                        <p>Быстрый и безопасный банковский перевод</p>
+                    </div>
+                    <div class="payment-method" onclick="selectMethod(this)">
+                        <i class="fas fa-credit-card"></i>
+                        <h3>Банковская карта</h3>
+                        <p>Visa, Mastercard, Мир</p>
+                    </div>
+                </div>
+                
+                <div id="sbp-details" class="payment-details">
+                    <h3>Инструкция по оплате</h3>
+                    <div class="detail-item">
+                        <span class="detail-label">Банк:</span>
+                        <span id="bank-name">Совкомбанк</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Номер телефона:</span>
+                        <span id="phone-number">+7977 496 66 99</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Тип перевода:</span>
+                        <span>СБП</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Сумма:</span>
+                        <span id="payment-amount">0 RUB</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Комментарий:</span>
+                        <span id="payment-comment">-</span>
+                    </div>
+                </div>
+                
+                <div class="btn-container">
+                    <button class="btn-prev" onclick="prevStep(1)">
+                        <i class="fas fa-arrow-left"></i>
+                        <span id="back-btn">Назад</span>
+                    </button>
+                    <button class="btn-next" onclick="makePayment()">
+                        <span id="confirm-btn">Подтвердить оплату</span>
+                        <i class="fas fa-check"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Step 3: Upload Proof -->
+            <div class="step-content" id="step3-content">
+                <h2 id="upload-title">Загрузите подтверждение оплаты</h2>
+                <p id="upload-subtitle">Пожалуйста, загрузите скриншот или фото подтверждения оплаты</p>
+                
+                <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <h3 id="upload-instruction">Нажмите, чтобы загрузить подтверждение</h3>
+                    <p id="upload-format">Поддерживаемые форматы: JPG, PNG, PDF (макс. 5MB)</p>
+                    <input type="file" id="file-input" accept=".jpg,.jpeg,.png,.pdf" hidden>
+                </div>
+                
+                <div id="file-info" class="hidden">
+                    <div class="payment-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Имя файла:</span>
+                            <span id="file-name">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Размер файла:</span>
+                            <span id="file-size">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="btn-container">
+                    <button class="btn-prev" onclick="prevStep(2)">
+                        <i class="fas fa-arrow-left"></i>
+                        <span id="back-btn2">Назад</span>
+                    </button>
+                    <button class="btn-next" id="generate-receipt-btn" disabled onclick="generateReceipt()">
+                        <span id="receipt-btn">Создать квитанцию</span>
+                        <i class="fas fa-receipt"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Receipt Section -->
+            <div class="step-content" id="receipt-content">
+                <div class="success-message">
+                    <i class="fas fa-check-circle"></i>
+                    <h2 id="success-title">Оплата прошла успешно!</h2>
+                    <p id="success-subtitle">Ваша оплата была успешно обработана</p>
+                </div>
+                
+                <div class="receipt">
+                    <div class="receipt-header">
+                        <h2 id="receipt-header">Платежная квитанция</h2>
+                        <p id="receipt-date">Дата: Загрузка...</p>
+                        <p id="receipt-number-text">Номер квитанции: <span id="receipt-number">RCT-2023-001</span></p>
+                    </div>
+                    
+                    <div class="receipt-details">
+                        <div class="receipt-item">
+                            <span id="receipt-service-label">Услуга:</span>
+                            <span id="receipt-service">-</span>
+                        </div>
+                        <div class="receipt-item">
+                            <span id="receipt-method-label">Способ оплаты:</span>
+                            <span id="receipt-method">-</span>
+                        </div>
+                        <div class="receipt-item">
+                            <span id="receipt-comment-label">Комментарий:</span>
+                            <span id="receipt-comment">-</span>
+                        </div>
+                        <div class="receipt-item">
+                            <span id="receipt-bank-label">Банк:</span>
+                            <span id="receipt-bank">-</span>
+                        </div>
+                        <div class="receipt-item">
+                            <span id="receipt-phone-label">Телефон:</span>
+                            <span id="receipt-phone">-</span>
+                        </div>
+                        <div class="receipt-item">
+                            <span id="receipt-date-label">Дата оплаты:</span>
+                            <span id="receipt-payment-date">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="receipt-total">
+                        <span id="receipt-total-label">Итоговая сумма:</span>
+                        <span id="receipt-amount">0 RUB</span>
+                    </div>
+                </div>
+                
+                <div class="btn-container">
+                    <button class="btn-prev" onclick="prevStep(3)">
+                        <i class="fas fa-arrow-left"></i>
+                        <span id="back-btn3">Назад</span>
+                    </button>
+                    <button class="btn-save" onclick="uploadToGoogle()">
+                        <i class="fab fa-google-drive"></i>
+                        <span id="save-btn">Сохранить в Google Документы</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Language support
+        const translations = {
+            ru: {
+                headerTitle: "Система оплаты",
+                headerSubtitle: "Завершите оплату в 3 простых шага",
+                langText: "English",
+                step1Title: "Детали оплаты",
+                step2Title: "Оплатить",
+                step3Title: "Подтверждение",
+                serviceLabel: "Выберите услугу",
+                amountLabel: "Сумма оплаты (RUB)",
+                commentLabel: "Комментарий к платежу",
+                commentNote: "Обязательно укажите, за кого производится оплата",
+                proceedBtn: "Перейти к оплате",
+                methodTitle: "Выберите способ оплаты",
+                methodSubtitle: "Выберите предпочтительный способ оплаты",
+                backBtn: "Назад",
+                confirmBtn: "Подтвердить оплату",
+                uploadTitle: "Загрузите подтверждение оплаты",
+                uploadSubtitle: "Пожалуйста, загрузите скриншот или фото подтверждения оплаты",
+                uploadInstruction: "Нажмите, чтобы загрузить подтверждение",
+                uploadFormat: "Поддерживаемые форматы: JPG, PNG, PDF (макс. 5MB)",
+                backBtn2: "Назад",
+                receiptBtn: "Создать квитанцию",
+                successTitle: "Оплата прошла успешно!",
+                successSubtitle: "Ваша оплата была успешно обработана",
+                receiptHeader: "Платежная квитанция",
+                receiptDate: "Дата: ",
+                receiptNumberText: "Номер квитанции: ",
+                receiptServiceLabel: "Услуга:",
+                receiptMethodLabel: "Способ оплаты:",
+                receiptCommentLabel: "Комментарий:",
+                receiptBankLabel: "Банк:",
+                receiptPhoneLabel: "Телефон:",
+                receiptDateLabel: "Дата оплаты:",
+                receiptTotalLabel: "Итоговая сумма:",
+                backBtn3: "Назад",
+                saveBtn: "Сохранить в Google Документы"
+            },
+            en: {
+                headerTitle: "Payment System",
+                headerSubtitle: "Complete your payment in 3 simple steps",
+                langText: "Русский",
+                step1Title: "Payment Details",
+                step2Title: "Make Payment",
+                step3Title: "Confirmation",
+                serviceLabel: "Select Service",
+                amountLabel: "Payment Amount (RUB)",
+                commentLabel: "Payment Comment",
+                commentNote: "Please specify who this payment is for",
+                proceedBtn: "Proceed to Payment",
+                methodTitle: "Select Payment Method",
+                methodSubtitle: "Choose your preferred payment option",
+                backBtn: "Back",
+                confirmBtn: "Confirm Payment",
+                uploadTitle: "Upload Payment Proof",
+                uploadSubtitle: "Please upload a screenshot or photo of your payment confirmation",
+                uploadInstruction: "Click to upload proof",
+                uploadFormat: "Supported formats: JPG, PNG, PDF (Max 5MB)",
+                backBtn2: "Back",
+                receiptBtn: "Generate Receipt",
+                successTitle: "Payment Successful!",
+                successSubtitle: "Your payment has been processed successfully",
+                receiptHeader: "Payment Receipt",
+                receiptDate: "Date: ",
+                receiptNumberText: "Receipt #: ",
+                receiptServiceLabel: "Service:",
+                receiptMethodLabel: "Payment Method:",
+                receiptCommentLabel: "Comment:",
+                receiptBankLabel: "Bank:",
+                receiptPhoneLabel: "Phone:",
+                receiptDateLabel: "Payment Date:",
+                receiptTotalLabel: "Total Amount:",
+                backBtn3: "Back",
+                saveBtn: "Save to Google Docs"
+            }
+        };
+        
+        // Current language
+        let currentLang = "ru";
+        
+        // Apply translations
+        function applyTranslations(lang) {
+            const trans = translations[lang];
+            for (const key in trans) {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.textContent = trans[key];
+                }
+            }
+        }
+        
+        // Toggle language
+        function toggleLanguage() {
+            currentLang = currentLang === "ru" ? "en" : "ru";
+            applyTranslations(currentLang);
+        }
+        
+        // Current step tracking
+        let currentStep = 1;
+        let paymentMethod = "СБП Перевод";
+        let paymentDetails = {
+            bank: "Совкомбанк",
+            phone: "+7977 496 66 99",
+            type: "СБП"
+        };
+        
+        // DOM elements
+        const stepElements = [null, document.getElementById('step1'), document.getElementById('step2'), document.getElementById('step3')];
+        const contentElements = [null, document.getElementById('step1-content'), document.getElementById('step2-content'), document.getElementById('step3-content')];
+        const receiptContent = document.getElementById('receipt-content');
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up translations
+            applyTranslations(currentLang);
+            
+            // Set the date in receipt
+            document.getElementById('receipt-date').textContent = translations[currentLang].receiptDate + new Date().toLocaleDateString();
+            // Generate a random receipt number
+            document.getElementById('receipt-number').textContent = "RCT-" + new Date().getFullYear() + "-" + Math.floor(100 + Math.random() * 900);
+            
+            // Set up file upload
+            document.getElementById('file-input').addEventListener('change', handleFileUpload);
+            
+            // Set up language toggle
+            document.getElementById('lang-toggle').addEventListener('click', toggleLanguage);
+            
+            // Initialize payment details
+            updatePaymentDetails();
+        });
+        
+        // Step navigation functions
+        function nextStep(step) {
+            // Validation for step 1
+            if (currentStep === 1) {
+                const service = document.getElementById('service').value;
+                const amount = document.getElementById('amount').value;
+                const comment = document.getElementById('comment').value;
+                
+                if (!service) {
+                    alert(currentLang === "ru" ? "Пожалуйста, выберите услугу" : "Please select a service");
+                    return;
+                }
+                
+                if (!amount || amount <= 0) {
+                    alert(currentLang === "ru" ? "Пожалуйста, введите корректную сумму" : "Please enter a valid amount");
+                    return;
+                }
+                
+                if (!comment) {
+                    alert(currentLang === "ru" ? "Пожалуйста, укажите, за кого производится оплата" : "Please specify who this payment is for");
+                    return;
+                }
+                
+                // Update payment amount display
+                document.getElementById('payment-amount').textContent = amount + " RUB";
+                document.getElementById('payment-comment').textContent = comment;
+            }
+            
+            // Hide current step
+            stepElements[currentStep].classList.remove('active');
+            contentElements[currentStep].classList.remove('active');
+            
+            // Show next step
+            currentStep = step;
+            stepElements[currentStep].classList.add('active');
+            contentElements[currentStep].classList.add('active');
+            
+            // For step 2, update payment details
+            if (currentStep === 2) {
+                updatePaymentDetails();
+            }
+        }
+        
+        function prevStep(step) {
+            // Hide current step
+            stepElements[currentStep].classList.remove('active');
+            contentElements[currentStep].classList.remove('active');
+            
+            // Show previous step
+            currentStep = step;
+            stepElements[currentStep].classList.add('active');
+            contentElements[currentStep].classList.add('active');
+        }
+        
+        // Payment method selection
+        function selectMethod(element) {
+            // Remove selected class from all methods
+            document.querySelectorAll('.payment-method').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked method
+            element.classList.add('selected');
+            
+            // Set payment method
+            paymentMethod = element.querySelector('h3').textContent;
+        }
+        
+        // Toggle between payment details
+        function updatePaymentDetails() {
+            // Randomly select payment details
+            const methods = [
+                { bank: "Совкомбанк", phone: "+7977 496 66 99", type: "СБП" },
+                { bank: "Сбербанк", phone: "+79104483756", type: "СБП" }
+            ];
+            
+            const randomIndex = Math.floor(Math.random() * methods.length);
+            paymentDetails = methods[randomIndex];
+            
+            // Update UI
+            document.getElementById('bank-name').textContent = paymentDetails.bank;
+            document.getElementById('phone-number').textContent = paymentDetails.phone;
+        }
+        
+        // Process payment
+        function makePayment() {
+            if (document.querySelector('.payment-method.selected') === null) {
+                alert(currentLang === "ru" ? "Пожалуйста, выберите способ оплаты" : "Please select a payment method");
+                return;
+            }
+            
+            // In a real system, this would process the payment
+            // For demo, we'll just move to next step
+            nextStep(3);
+        }
+        
+        // Handle file upload
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // Validate file type and size
+            const validTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+            if (!validTypes.includes(file.type)) {
+                alert(currentLang === "ru" ? "Пожалуйста, загрузите файл формата JPG, PNG или PDF" : "Please upload a JPG, PNG, or PDF file");
+                return;
+            }
+            
+            if (file.size > 5 * 1024 * 1024) { // 5MB
+                alert(currentLang === "ru" ? "Размер файла превышает 5MB" : "File size exceeds 5MB limit");
+                return;
+            }
+            
+            // Update UI with file info
+            document.getElementById('file-name').textContent = file.name;
+            document.getElementById('file-size').textContent = (file.size / 1024).toFixed(2) + " KB";
+            document.getElementById('file-info').classList.remove('hidden');
+            
+            // Enable the generate receipt button
+            document.getElementById('generate-receipt-btn').disabled = false;
+            
+            // Change upload area style
+            document.getElementById('upload-area').innerHTML = `
+                <i class="fas fa-check-circle" style="color:#4CAF50"></i>
+                <h3>${currentLang === "ru" ? "Файл успешно загружен" : "File Uploaded Successfully"}</h3>
+                <p>${file.name} (${(file.size / 1024).toFixed(2)} KB)</p>
+            `;
+        }
+        
+        // Generate receipt
+        function generateReceipt() {
+            // Get payment details
+            const service = document.getElementById('service').value;
+            const serviceText = document.querySelector(`#service option[value="${service}"]`).text;
+            const amount = document.getElementById('amount').value + " RUB";
+            const comment = document.getElementById('comment').value;
+            const bank = paymentDetails.bank;
+            const phone = paymentDetails.phone;
+            
+            // Update receipt with details
+            document.getElementById('receipt-service').textContent = serviceText;
+            document.getElementById('receipt-method').textContent = paymentMethod;
+            document.getElementById('receipt-comment').textContent = comment;
+            document.getElementById('receipt-bank').textContent = bank;
+            document.getElementById('receipt-phone').textContent = phone;
+            document.getElementById('receipt-amount').textContent = amount;
+            
+            // Set payment date as current time
+            const now = new Date();
+            document.getElementById('receipt-payment-date').textContent = 
+                now.toLocaleDateString() + " " + now.toLocaleTimeString();
+            
+            // Move to receipt step
+            stepElements[currentStep].classList.remove('active');
+            contentElements[currentStep].classList.remove('active');
+            
+            // Show receipt
+            receiptContent.classList.add('active');
+            currentStep = 4; // Special step for receipt
+            
+            // Mark step 3 as completed
+            document.getElementById('step3').classList.add('completed');
+        }
+        
+        // Upload to Google Drive (simulated)
+        function uploadToGoogle() {
+            alert(currentLang === "ru" ? 
+                "Квитанция сохранена в Google Документы!\n\nВ реальной системе это загрузит квитанцию и подтверждение оплаты с использованием Google Drive API." : 
+                "Receipt has been saved to Google Drive!\n\nIn a real implementation, this would upload the receipt and payment proof using the Google Drive API.");
+            
+            // Reset form for demo purposes
+            setTimeout(() => {
+                document.getElementById('service').selectedIndex = 0;
+                document.getElementById('amount').value = "";
+                document.getElementById('comment').value = "";
+                document.querySelector('.payment-method.selected')?.classList.remove('selected');
+                document.getElementById('file-info').classList.add('hidden');
+                document.getElementById('file-input').value = "";
+                document.getElementById('generate-receipt-btn').disabled = true;
+                
+                // Reset upload area
+                const uploadArea = document.getElementById('upload-area');
+                uploadArea.innerHTML = `
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <h3 id="upload-instruction">${currentLang === "ru" ? "Нажмите, чтобы загрузить подтверждение" : "Click to upload proof"}</h3>
+                    <p id="upload-format">${currentLang === "ru" ? "Поддерживаемые форматы: JPG, PNG, PDF (макс. 5MB)" : "Supported formats: JPG, PNG, PDF (Max 5MB)"}</p>
+                `;
+                
+                // Return to step 1
+                receiptContent.classList.remove('active');
+                currentStep = 1;
+                stepElements[1].classList.add('active');
+                contentElements[1].classList.add('active');
+                document.getElementById('step3').classList.remove('completed');
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
